@@ -184,7 +184,7 @@ var goSQLMigrationModuleTemplate = template.Must(template.New("goose.go-migratio
 import (
 	"database/sql"
 
-	"git.esphere.local/SberbankTravel/hotels/goroomagent/libs/pressly/goose/v3"
+	goose "github.com/borisBezb/goose-modules"
 )
 
 func init() {
