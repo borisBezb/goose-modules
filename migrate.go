@@ -183,10 +183,6 @@ func AddNamedModuleMigration(module string, filename string, up func(*sql.Tx) er
 }
 
 func collectMigrationsFS(fsys fs.FS, dirpath string, current, target int64) (Migrations, error) {
-	if _, err := fs.Stat(fsys, dirpath); errors.Is(err, fs.ErrNotExist) {
-		return nil, fmt.Errorf("%s directory does not exist", dirpath)
-	}
-
 	var migrations Migrations
 
 	// SQL migration files.
