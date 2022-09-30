@@ -156,20 +156,6 @@ func upWithMissing(
 		if option.applyUpByOne {
 			return nil
 		}
-		// TODO(mf): do we need this check? It's a bit redundant, but we may
-		// want to keep it as a safe-guard. Maybe we should instead have
-		// the underlying query (if possible) return the current version as
-		// part of the same transaction.
-		current, err := GetDBVersion(db)
-		if err != nil {
-			return err
-		}
-		if current == missing.Version {
-			lookupApplied[missing.Version] = true
-			continue
-		}
-		return fmt.Errorf("error: missing migration:%d does not match current db version:%d",
-			current, missing.Version)
 	}
 
 	// We can no longer rely on the database version_id to be sequential because
