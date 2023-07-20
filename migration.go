@@ -98,6 +98,7 @@ func (m *Migration) run(db *sql.DB, direction bool) error {
 		}
 
 		module := GetModuleByName(m.Module)
+		SetTableName(module.Table)
 
 		if !m.noVersioning {
 			if direction {
