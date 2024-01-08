@@ -10,7 +10,7 @@ import (
 type SQLDialect interface {
 	createVersionTableSQL(tableName string) string // sql string to create the db version table
 	insertVersionSQL(tableName string) string      // sql string to insert the initial version table row
-	deleteVersionSQL() string                      // sql string to delete version
+	deleteVersionSQL(tableName string) string      // sql string to delete version
 	migrationSQL() string                          // sql string to retrieve migrations
 	dbVersionQuery(db *sql.DB, tableName string) (*sql.Rows, error)
 }
@@ -80,8 +80,8 @@ func (m PostgresDialect) migrationSQL() string {
 	return fmt.Sprintf("SELECT tstamp, is_applied FROM %s WHERE version_id=$1 ORDER BY tstamp DESC LIMIT 1", TableName())
 }
 
-func (pg PostgresDialect) deleteVersionSQL() string {
-	return fmt.Sprintf("DELETE FROM %s WHERE version_id=$1;", TableName())
+func (pg PostgresDialect) deleteVersionSQL(tableName string) string {
+	return fmt.Sprintf("DELETE FROM %s WHERE version_id=$1;", tableName)
 }
 
 ////////////////////////////
@@ -118,8 +118,8 @@ func (m MySQLDialect) migrationSQL() string {
 	return fmt.Sprintf("SELECT tstamp, is_applied FROM %s WHERE version_id=? ORDER BY tstamp DESC LIMIT 1", TableName())
 }
 
-func (m MySQLDialect) deleteVersionSQL() string {
-	return fmt.Sprintf("DELETE FROM %s WHERE version_id=?;", TableName())
+func (m MySQLDialect) deleteVersionSQL(tableName string) string {
+	return fmt.Sprintf("DELETE FROM %s WHERE version_id=?;", tableName)
 }
 
 ////////////////////////////
@@ -168,8 +168,8 @@ ORDER BY tstamp DESC
 	return fmt.Sprintf(tpl, TableName())
 }
 
-func (m SqlServerDialect) deleteVersionSQL() string {
-	return fmt.Sprintf("DELETE FROM %s WHERE version_id=@p1;", TableName())
+func (m SqlServerDialect) deleteVersionSQL(tableName string) string {
+	return fmt.Sprintf("DELETE FROM %s WHERE version_id=@p1;", tableName)
 }
 
 ////////////////////////////
@@ -205,8 +205,8 @@ func (m Sqlite3Dialect) migrationSQL() string {
 	return fmt.Sprintf("SELECT tstamp, is_applied FROM %s WHERE version_id=? ORDER BY tstamp DESC LIMIT 1", TableName())
 }
 
-func (m Sqlite3Dialect) deleteVersionSQL() string {
-	return fmt.Sprintf("DELETE FROM %s WHERE version_id=?;", TableName())
+func (m Sqlite3Dialect) deleteVersionSQL(tableName string) string {
+	return fmt.Sprintf("DELETE FROM %s WHERE version_id=?;", tableName)
 }
 
 ////////////////////////////
@@ -243,8 +243,8 @@ func (m RedshiftDialect) migrationSQL() string {
 	return fmt.Sprintf("SELECT tstamp, is_applied FROM %s WHERE version_id=$1 ORDER BY tstamp DESC LIMIT 1", TableName())
 }
 
-func (rs RedshiftDialect) deleteVersionSQL() string {
-	return fmt.Sprintf("DELETE FROM %s WHERE version_id=$1;", TableName())
+func (rs RedshiftDialect) deleteVersionSQL(tableName string) string {
+	return fmt.Sprintf("DELETE FROM %s WHERE version_id=$1;", tableName)
 }
 
 ////////////////////////////
@@ -281,8 +281,8 @@ func (m TiDBDialect) migrationSQL() string {
 	return fmt.Sprintf("SELECT tstamp, is_applied FROM %s WHERE version_id=? ORDER BY tstamp DESC LIMIT 1", TableName())
 }
 
-func (m TiDBDialect) deleteVersionSQL() string {
-	return fmt.Sprintf("DELETE FROM %s WHERE version_id=?;", TableName())
+func (m TiDBDialect) deleteVersionSQL(tableName string) string {
+	return fmt.Sprintf("DELETE FROM %s WHERE version_id=?;", tableName)
 }
 
 ////////////////////////////
@@ -317,6 +317,6 @@ func (m ClickHouseDialect) migrationSQL() string {
 	return fmt.Sprintf("SELECT tstamp, is_applied FROM %s WHERE version_id = ? ORDER BY tstamp DESC LIMIT 1", TableName())
 }
 
-func (m ClickHouseDialect) deleteVersionSQL() string {
-	return fmt.Sprintf("ALTER TABLE %s DELETE WHERE version_id = ?", TableName())
+func (m ClickHouseDialect) deleteVersionSQL(tableName string) string {
+	return fmt.Sprintf("ALTER TABLE %s DELETE WHERE version_id = ?", tableName)
 }
