@@ -298,7 +298,12 @@ func (m ClickHouseDialect) createVersionTableSQL(tableName string) string {
       is_applied UInt8,
       date Date default now(),
       tstamp DateTime default now()
-    ) Engine = MergeTree(date, (date), 8192)`, tableName)
+    )
+    ENGINE = MergeTree()
+	PRIMARY KEY (date)
+	ORDER BY (date)
+	SETTINGS index_granularity = 8192;
+    `, tableName)
 }
 
 func (m ClickHouseDialect) dbVersionQuery(db *sql.DB, tableName string) (*sql.Rows, error) {
