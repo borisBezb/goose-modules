@@ -307,7 +307,7 @@ func (m ClickHouseDialect) createVersionTableSQL(tableName string) string {
 }
 
 func (m ClickHouseDialect) dbVersionQuery(db *sql.DB, tableName string) (*sql.Rows, error) {
-	rows, err := db.Query(fmt.Sprintf("SELECT version_id, is_applied FROM %s ORDER BY tstamp DESC LIMIT 1", tableName))
+	rows, err := db.Query(fmt.Sprintf("SELECT version_id, is_applied FROM %s ORDER BY tstamp", tableName))
 	if err != nil {
 		return nil, err
 	}
