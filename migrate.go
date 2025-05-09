@@ -33,6 +33,8 @@ type MigrationModule struct {
 	Dir   string
 }
 
+type MigrationFnNoTx func(*sql.DB) error
+
 // Migrations slice.
 type Migrations []*Migration
 
@@ -157,6 +159,12 @@ func AddModuleMigration(module string, up func(*sql.Tx) error, down func(*sql.Tx
 	AddNamedModuleMigration(module, filename, up, down)
 }
 
+// AddModuleMigrationNoTx adds a migration in specific module outside transaction
+func AddModuleMigrationNoTx(module string, up MigrationFnNoTx, down MigrationFnNoTx) {
+	_, filename, _, _ := runtime.Caller(1)
+	AddNamedModuleMigrationNoTx(module, filename, up, down)
+}
+
 // AddNamedModuleMigration adds a migration in specific module
 func AddNamedModuleMigration(module string, filename string, up func(*sql.Tx) error, down func(*sql.Tx) error) {
 	v, _ := NumericComponent(filename)
@@ -167,6 +175,31 @@ func AddNamedModuleMigration(module string, filename string, up func(*sql.Tx) er
 		Registered: true,
 		UpFn:       up,
 		DownFn:     down,
+		Source:     filename,
+		Module:     module,
+	}
+
+	if _, ok := registeredModuleGoMigrations[module]; !ok {
+		registeredModuleGoMigrations[module] = make(map[int64]*Migration)
+	}
+
+	if existing, ok := registeredModuleGoMigrations[module][v]; ok {
+		panic(fmt.Sprintf("failed to add migration %q: version conflicts with %q", filename, existing.Source))
+	}
+
+	registeredModuleGoMigrations[module][v] = migration
+}
+
+// AddNamedModuleMigrationNoTx adds a migration in specific module outside transaction
+func AddNamedModuleMigrationNoTx(module string, filename string, up MigrationFnNoTx, down MigrationFnNoTx) {
+	v, _ := NumericComponent(filename)
+	migration := &Migration{
+		Version:    v,
+		Next:       -1,
+		Previous:   -1,
+		Registered: true,
+		UpFnNoTx:   up,
+		DownFnNoTx: down,
 		Source:     filename,
 		Module:     module,
 	}

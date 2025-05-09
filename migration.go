@@ -27,6 +27,8 @@ type Migration struct {
 	Registered   bool
 	UpFn         func(*sql.Tx) error // Up go migration function
 	DownFn       func(*sql.Tx) error // Down go migration function
+	UpFnNoTx     MigrationFnNoTx
+	DownFnNoTx   MigrationFnNoTx
 	Module       string
 	noVersioning bool
 }
@@ -79,6 +81,37 @@ func (m *Migration) run(db *sql.DB, direction bool) error {
 		if !m.Registered {
 			return errors.Errorf("ERROR %v: failed to run Go migration: Go functions must be registered and built into a custom binary (see https://github.com/pressly/goose/tree/master/examples/go-migrations)", m.Source)
 		}
+
+		if m.UpFnNoTx != nil {
+			fn := m.UpFnNoTx
+			if !direction {
+				fn = m.DownFnNoTx
+			}
+
+			if err := fn(db); err != nil {
+				return errors.Wrapf(err, "ERROR %v: failed to run Go migration function %T", filepath.Base(m.Source), fn)
+			}
+
+			module := GetModuleByName(m.Module)
+			SetTableName(module.Table)
+
+			if !m.noVersioning {
+				if direction {
+					if _, err := db.Exec(GetDialect().insertVersionSQL(module.Table), m.Version, direction); err != nil {
+						return errors.Wrap(err, "ERROR failed to execute migration")
+					}
+				} else {
+					if _, err := db.Exec(GetDialect().deleteVersionSQL(module.Table), m.Version); err != nil {
+						return errors.Wrap(err, "ERROR failed to execute migration")
+					}
+				}
+			}
+
+			log.Println("OK   ", m.Module, "    ", filepath.Base(m.Source))
+
+			return nil
+		}
+
 		tx, err := db.Begin()
 		if err != nil {
 			return errors.Wrap(err, "ERROR failed to begin transaction")
